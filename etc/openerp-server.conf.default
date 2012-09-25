@@ -1,0 +1,83 @@
+[options]
+; Server
+admin_passwd = admin
+addons_path = None
+csv_internal_sep = ,
+import_partial = 
+login_message = False
+pidfile = None
+reportgz = False
+timezone = False
+without_demo = False
+
+; Database
+db_host = False
+db_port = False
+db_user = False
+db_password = False
+db_name = False
+db_template = template0
+db_maxconn = 64
+list_db = True
+pg_path = None
+unaccent = False
+
+; NET-RPC Protocol
+netrpc = True
+netrpc_interface = 
+netrpc_port = 8070
+
+; XML-RPC Protocol
+xmlrpc = True
+xmlrpc_interface = 
+xmlrpc_port = 8069
+proxy_mode = False
+
+; Mail
+smtp_server = localhost
+smtp_port = 25
+smtp_ssl = False
+smtp_user = False
+smtp_password = False
+email_from = False
+
+; Logging
+log_handler = :INFO
+logfile = None
+log_level = info
+logrotate = True
+debug_mode = False
+syslog = False
+
+; Testing
+test_commit = False
+test_disable = False
+test_file = False
+test_report_directory = False
+assert_exit_level = error
+
+; Performance
+cache_timeout = 100000
+cpu_time_limit = 60
+max_cron_threads = 4
+osv_memory_age_limit = 1.0
+osv_memory_count_limit = False
+virtual_memory_limit = 805306368
+virtual_memory_reset = 671088640
+
+; Unused options
+;
+; dbfilter = .*
+; demo = {}
+; server_wide_modules = None
+; translate_modules = ['all']
+;
+; static_http_enable = False
+; static_http_document_root = None
+; static_http_url_prefix = None
+;
+; xmlrpcs = True
+; xmlrpcs_interface = 
+; xmlrpcs_port = 8071
+; secure_cert_file = server.cert
+; secure_pkey_file = server.pkey
