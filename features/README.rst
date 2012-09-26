@@ -52,8 +52,8 @@ These helpers are made available in the globals, thanks to the line
 
 These checks are more specific:
 
-* ``assert_almost_equal(first, second, msg=None)``
-* ``assert_not_almost_equal(first, second, msg=None)``
+* ``assert_almost_equal(first, second, places=7, msg=None, delta=None)``
+* ``assert_not_almost_equal(first, second, places=7, msg=None, delta=None)``
 * ``assert_greater(first, second, msg=None)``
 * ``assert_greater_equal(first, second, msg=None)``
 * ``assert_less(first, second, msg=None)``
