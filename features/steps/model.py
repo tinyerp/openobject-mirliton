@@ -85,7 +85,7 @@ def parse_table_values(ctx, obj, table):
 @step(r'/^.*(?:need|there is|there\'s) (?:a|an|the) "([\w._]+)" with (.+)$/')
 @step(r'/^.*(?:a|the) new or existing "([\w._]+)" with (.+)$/')
 # Given a new or existing "res.partner" with name Isaac Newton
-# Then we need a "res.partner" with name Isaac Newton
+# Then I need a "res.partner" with name Isaac Newton
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
@@ -160,6 +160,7 @@ def impl(ctx, obj, domain):
 
 
 @step(r'/^.*no "([\w._]+)" with (.+)$/')
+# Given there's no "res.partner" with name Isaac Newton
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
@@ -168,6 +169,7 @@ def impl(ctx, obj, domain):
 
 
 @step(r'/^.*all (?:the )?"([\w._]+)" with (.+)$/')
+# Given all "res.partner" with name Isaac Newton
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
@@ -193,3 +195,13 @@ def impl(ctx):
     record = ctx.data['records'][0]
     assert_true(record)
     ctx.data['record'] = record
+
+
+@step('attribute "{attr}" is set from "{path}"')
+def impl(ctx, attr, path):
+    record = ctx.data['record']
+    assert_true(record)
+    with open(path) as f:
+        value = f.read()
+    assert_true(value)
+    record.write({attr: value})

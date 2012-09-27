@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 from datetime import date
 
 from environment import *
@@ -22,7 +23,7 @@ def impl(ctx, db_name):
     assert_not_in(db_name, db.list())
 
 
-@when('we create a new database "{db_name}"')
+@when('I create a new database "{db_name}"')
 def impl(ctx, db_name):
     client = ctx.client
     admin_passwd = ctx.conf['admin_passwd']
@@ -37,7 +38,7 @@ def impl(ctx, db_name):
 def impl(ctx, db_name):
     assert_in(db_name, ctx.client.db.list())
     ctx.conf['db_name'] = db_name
-    puts('Hey, db exists!')
+    # puts('Hey, db exists!')
 
 
 @step('user "{user}" log in with password "{password}"')
@@ -54,24 +55,9 @@ def impl(ctx, user, password):
     # assert_true(0)
 
 
-@when('we install the following languages')
-def impl(ctx):
-    ctx.data['lang'] = cfglang = set()
-    for (lang,) in ctx.table:
-        if model('res.lang').search([('code', '=', lang)]):
-            continue
-        res = model('base.language.install').create({'lang': lang})
-        model('base.language.install').lang_install([res.id])
-        cfglang.add(lang)
+# ir.module.module
 
-
-@then('these languages should be available')
-def impl(ctx):
-    for lang in ctx.data['lang']:
-        assert_true(model('res.lang').search([('code', '=', lang)]))
-
-
-@when('we install the required modules')
+@when('I install the required modules')
 def impl(ctx):
     client = ctx.client
     to_install = []
@@ -99,6 +85,12 @@ def impl(ctx):
     # 10 extra: web*
 
 
+@given('the module "{name}" is installed')
+def impl(ctx, name):
+    (mod,) = model('ir.module.module').browse([('name', '=', name)])
+    assert_equal(mod.state, 'installed')
+
+
 @then('the models are loaded')
 def impl(ctx):
     for (name,) in ctx.table:
@@ -106,11 +98,19 @@ def impl(ctx):
     assert_true(model('res.partner'))
 
 
-@when('we stop all scheduled tasks')
+# ir.cron
+
+@when('I stop all scheduled tasks')
 def impl(ctx):
-    tasks = model('ir.cron').browse(['active = True'])
-    if tasks:
-        tasks.write({'active': False})
+    # Retry 3 times
+    for idx in '123':
+        tasks = model('ir.cron').browse(['active = True'])
+        if tasks:
+            try:
+                tasks.write({'active': False})
+            except Exception:
+                continue
+        break
 
 
 @then('no task is scheduled')
@@ -119,7 +119,26 @@ def impl(ctx):
     assert_false(tasks)
 
 
-@when('we update the following languages')
+# res.lang
+
+@when('I install the following languages')
+def impl(ctx):
+    ctx.data['lang'] = cfglang = set()
+    for (lang,) in ctx.table:
+        if model('res.lang').search([('code', '=', lang)]):
+            continue
+        res = model('base.language.install').create({'lang': lang})
+        model('base.language.install').lang_install([res.id])
+        cfglang.add(lang)
+
+
+@then('these languages should be available')
+def impl(ctx):
+    for lang in ctx.data['lang']:
+        assert_true(model('res.lang').search([('code', '=', lang)]))
+
+
+@when('I update the following languages')
 def impl(ctx):
     tlangs = model('res.lang').browse([('translatable', '=', True)])
     codes = set([lang for (lang,) in ctx.table])
@@ -129,7 +148,7 @@ def impl(ctx):
     mods.button_update_translations()
 
 
-@when('we set these languages to swiss formatting')
+@when('I set these languages to swiss formatting')
 def impl(ctx):
     langs = [lang for (lang,) in ctx.table]
     langs = model('res.lang').browse([('code', 'in', langs)])
@@ -147,7 +166,9 @@ def impl(ctx):
     assert_false(langs)
 
 
-@when('we set the "{name}" decimal precision to {digits:d} digits')
+# decimal.precision
+
+@when('I set the "{name}" decimal precision to {digits:d} digits')
 def impl(ctx, name, digits):
     (prec,) = model('decimal.precision').browse([('name', '=', name)])
     assert_true(prec)
@@ -157,11 +178,7 @@ def impl(ctx, name, digits):
     #set_trace()
 
 
-@given('the module "{name}" is installed')
-def impl(ctx, name):
-    (mod,) = model('ir.module.module').browse([('name', '=', name)])
-    assert_equal(mod.state, 'installed')
-
+# account.account
 
 @given('no account is set')
 def impl(ctx):
@@ -170,13 +187,39 @@ def impl(ctx):
     assert_false(account_ids)
 
 
+@when('I generate account chart')
+def impl(ctx):
+    for template, digits in ctx.table:
+        chart = model('account.chart.template').browse(
+            [('name', '=', template)])
+        assert_true(chart, "Can't find chart named %s" % template)
+        (chart,) = chart
+        existing = model('account.account').search(
+            [('code', '=', chart.account_root_id.code)])
+        if existing:
+            # XXX remove?
+            puts("Account chart %s already generated from %s" %
+                 (chart.account_root_id.name, template))
+        else:
+            digits = int(digits)
+            wmca = model('wizard.multi.charts.accounts')
+            config_wizard = wmca.create(
+                {'code_digits': digits, 'chart_template_id': chart.id})
+            res = config_wizard.onchange_chart_template_id(chart.id, {})
+            assert_in('value', res)
+            config_wizard.write(res['value'])
+            config_wizard.execute()
+            # wmca.browse([config_wizard.id]).execute()
+            puts("Chart of account generated ! ")
+
+
 @then('accounts should be available')
 def impl(ctx):
     account_ids = model('account.account').search([], limit=1)
     assert_true(account_ids)
 
 
-@step('we create fiscal years since "{start_year:d}"')
+@step('I create fiscal years since "{start_year:d}"')
 def impl(ctx, start_year):
     stop_year = date.today().year
     assert_less_equal(start_year, stop_year)
@@ -202,6 +245,22 @@ def impl(ctx):
     assert_equal(len(fys), len(all_years))
 
 
+@step('all journals allow entry cancellation')
+def impl(ctx):
+    journals = model('account.journal').browse([])
+    assert_true(journals)
+    journals.write({'update_posted': True})
+
+
+@step('all taxes are in TTC mode')
+def impl(ctx):
+    taxes = model('account.tax').browse([])
+    assert_true(taxes)
+    taxes.write({'price_include': True})
+
+
+# res.company
+
 @step('its rml header is set to "{path}"')
 def impl(ctx, path):
     company = ctx.data['record']
@@ -211,6 +270,14 @@ def impl(ctx, path):
         'rml_header': header,
         'rml_header2': header,
     })
+
+
+@step('the company has the "{path}" logo')
+def impl(ctx, path):
+    company = ctx.data['record']
+    with open(path) as f:
+        img = base64.b64encode(f.read())
+    company.logo = img
 
 
 @step('the main company currency is "{code}" with a rate of "{rate:f}"')
@@ -224,8 +291,54 @@ def impl(ctx, code, rate):
     company.currency_id = curr.id
 
 
-@step('all journals allow entry cancellation')
-def impl(ctx):
-    journals = model('account.journal').browse([])
-    assert_true(journals)
-    journals.write({'update_posted': True})
+# ir.translation
+
+@step('the translation for "{src}" in "{name}", language "{lang}" is "{value}"')
+def impl(ctx, src, name, lang, value):
+    res = ctx.data['record']
+    assert_true(res)
+    trans_line = model('ir.translation').browse([
+        'src = %s' % src, 'name = %s' % name, 'type = model',
+        'lang = %s' % lang, 'res_id = %s' % res.id])
+    if trans_line:
+        (trans_line,) = trans_line
+    else:
+        trans_line = model('ir.translation').create({
+            'src': src, 'name': name, 'type': 'model',
+            'lang': lang, 'res_id': res.id})
+    trans_line.value = value
+
+
+# res.users
+
+@step('there is no user with login "{login}"')
+def impl(ctx, login):
+    users = model('res.users').browse(['login = %s' % login])
+    if users:
+        assert_equal(len(users), 1)
+        users.write({'active': False})
+        users.unlink()
+
+
+@step('I duplicate the user "{username}"')
+def impl(ctx, username):
+    res = model('res.users').browse(['name = %s' % username, 'active = False'])
+    assert_equal(len(res), 1)
+    (tmpl_user,) = res
+    assert_false(tmpl_user.active)
+    assert_true(ctx.table)
+    defaults = dict([(attr, value) for (attr, value) in ctx.table])
+    defaults['active'] = True
+    new_user = tmpl_user.copy(defaults)
+    assert_greater(new_user.id, 0)
+
+
+# ir.header_webkit
+
+@step('I link the report "{name}" to this webkit_header')
+def impl(ctx, name):
+    head = ctx.data['record']
+    assert_true(head)
+    report = model('ir.actions.report.xml').browse(['name = %s' % name])
+    assert_true(report)
+    report.write({'webkit_header': head.id})
