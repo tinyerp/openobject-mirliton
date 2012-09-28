@@ -2,7 +2,7 @@
 import base64
 from datetime import date
 
-from environment import *
+from support import *
 
 
 @given('the server is on')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from environment import *
+from support import *
 
 
 @step('it fails')

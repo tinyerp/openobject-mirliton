@@ -32,7 +32,7 @@ The regex parser is used if the step name is enclosed between forward slashes.
 
 
 These helpers are made available in the globals, thanks to the line
-``from environment import *``:
+``from support import *``:
 
 * ``assert_equal(first, second, msg=None)``
 * ``assert_not_equal(first, second, msg=None)``

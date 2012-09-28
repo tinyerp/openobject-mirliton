@@ -2,7 +2,7 @@
 from ast import literal_eval
 import time
 
-from environment import *
+from support import *
 
 
 def parse_domain(domain):
