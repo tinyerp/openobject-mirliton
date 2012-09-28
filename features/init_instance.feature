@@ -2,8 +2,9 @@
 
 @init
 Feature: Initialize a new database
-  As an administrator
-  I automate the steps to install the database
+  In order to prepare a new instance
+  As a system administrator
+  I want to create a database and load the initial data
 
   @newdb
   Scenario: Create a new database
