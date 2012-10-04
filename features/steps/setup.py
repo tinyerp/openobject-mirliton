@@ -23,16 +23,25 @@ def impl(ctx, db_name):
     assert_not_in(db_name, db.list())
 
 
-@when('I create a new database "{db_name}"')
-def impl(ctx, db_name):
+def _create_db(ctx, db_name=None):
     client = ctx.client
+    if db_name is None:
+        db_name = ctx.conf['db_name']
     admin_passwd = ctx.conf['admin_passwd']
     demo, lang = False, 'en_US'
     # user_password = 'admin'
     # XXX this should raise an error if the database exists already
+    assert_is_not_none(db_name)
     if db_name not in client.db.list():
         client.create_database(admin_passwd, db_name, demo, lang)
 
+@when('I create a new database "{db_name}"')
+def impl(ctx, db_name):
+    _create_db(ctx, db_name)
+
+@when('I create a new database based on the configuration file')
+def impl(ctx):
+    _create_db(ctx)
 
 @step('the database "{db_name}" exists')
 def impl(ctx, db_name):
@@ -40,6 +49,17 @@ def impl(ctx, db_name):
     ctx.conf['db_name'] = db_name
     # puts('Hey, db exists!')
 
+@step('the database of the configuration file exists')
+def impl(ctx):
+    assert_in(ctx.conf['db_name'], ctx.client.db.list())
+
+@step('the database of the configuration file exists otherwise I create it')
+def impl(ctx):
+    assert_is_not_none(ctx.conf['db_name'])
+    if ctx.conf['db_name'] not in ctx.client.db.list():
+        ctx.execute_steps(u'''
+        When I create a new database based on the configuration file
+        ''')
 
 @step('user "{user}" log in with password "{password}"')
 def impl(ctx, user, password):
