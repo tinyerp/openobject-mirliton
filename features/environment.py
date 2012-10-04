@@ -12,13 +12,14 @@ behave_better.patch_all()
 
 
 def before_all(ctx):
-    (host, port, admin_passwd) = read_config()
+    (host, port, admin_passwd, database) = read_config()
     server = 'http://%s:%s' % (host, port)
     ctx._is_context = True
     ctx.client = erppeek.Client(server, verbose=ctx.config.verbose)
     ctx.conf = {
         'server': server,
         'admin_passwd': admin_passwd,
+        'db_name': database,
     }
 
 

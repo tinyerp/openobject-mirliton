@@ -16,4 +16,5 @@ def read_config(path='etc/openerp-server.conf'):
     host = p.get('options', 'xmlrpc_interface') or '127.0.0.1'
     port = p.get('options', 'xmlrpc_port') or '8069'
     admin_passwd = p.get('options', 'admin_passwd')
-    return (host, port, admin_passwd)
+    database = p.get('options', 'database')
+    return (host, port, admin_passwd, database)
