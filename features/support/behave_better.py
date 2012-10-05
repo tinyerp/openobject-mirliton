@@ -68,7 +68,7 @@ class PrettyFormatter(formatter.pretty.PrettyFormatter):
             self.stream.write('\n')
         self.stream.flush()
 
-    def doc_string(self, doc_string, strformat=str):
+    def doc_string(self, doc_string, strformat=unicode):
         triplequotes = self.format('comments').text(u'"""')
         doc_string = strformat(self.escape_triple_quotes(doc_string))
         self.stream.write(self.indent(u'\n'.join([
@@ -123,3 +123,8 @@ class PrettyFormatter(formatter.pretty.PrettyFormatter):
         formatted_tags = u' '.join(self.format('tag').text('@' + tag)
                                    for tag in tags)
         self.stream.write(indent + formatted_tags + '\n')
+
+    def eof(self):
+        self.replay()
+        self.stream.write('\033[A')
+        self.stream.flush()
