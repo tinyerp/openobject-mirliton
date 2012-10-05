@@ -12,8 +12,11 @@ behave_better.patch_all()
 
 
 def before_all(ctx):
-    (host, port, admin_passwd, database) = read_config()
-    server = 'http://%s:%s' % (host, port)
+    args = '-c etc/openerp-server.conf --without-demo all'
+    args += ' --logfile var/log/behave-stdout.log'
+    server = erppeek.start_openerp_services(args)
+    admin_passwd = server.tools.config['admin_passwd']
+    database = server.tools.config['db_name']
     ctx._is_context = True
     ctx.client = erppeek.Client(server, verbose=ctx.config.verbose)
     ctx.conf = {

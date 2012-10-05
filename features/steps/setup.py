@@ -16,7 +16,6 @@ def impl(ctx):
 def impl(ctx, db_name):
     db = ctx.client.db
     # XXX deletion should be a separate step
-    assert_not_in('db_name', ctx.conf.keys())
     if db_name in db.list():
         admin_passwd = ctx.conf['admin_passwd']
         db.drop(admin_passwd, db_name)
