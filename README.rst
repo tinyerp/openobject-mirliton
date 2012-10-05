@@ -64,7 +64,14 @@ If PostgreSQL is already installed on a separate server, adapt this step.
  $ bin/buildout
 
 
-(3) Run OpenERP
+(3) Run Tests
+-------------
+::
+
+ $ bin/behave
+
+
+(4) Run OpenERP
 ---------------
 ::
 
@@ -72,13 +79,6 @@ If PostgreSQL is already installed on a separate server, adapt this step.
 
  $ bin/supervisorctl status
  $ bin/supervisorctl help
-
-
-(4) Run Tests
--------------
-::
-
- $ bin/behave
 
 
 Tweak the configuration
