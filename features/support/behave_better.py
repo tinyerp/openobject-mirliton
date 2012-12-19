@@ -3,9 +3,12 @@
 
 Some of them might be proposed upstream
 """
+import os.path
+
 from behave import formatter
 from behave import matchers
 from behave import model
+from behave import runner
 
 __all__ = ['patch_all']
 _behave_patched = False
@@ -15,7 +18,10 @@ def patch_all():
     global _behave_patched
     if not _behave_patched:
         patch_matchers_get_matcher()
+        patch_model_Feature_run()
         patch_model_Table_raw()
+        patch_runner_Runner_feature_files()
+        formatter.formatters.register(PlainFormatter)
         formatter.formatters.register(PrettyFormatter)
         _behave_patched = True
 
@@ -30,6 +36,16 @@ def patch_matchers_get_matcher():
     matchers.get_matcher = get_matcher
 
 
+def patch_model_Feature_run():
+    # Fix exit status
+    # https://github.com/jeamland/behave/issues/52
+    def run(self, runner):
+        self._run_orig(runner)
+        return runner.context.failed
+    model.Feature._run_orig = model.Feature.run
+    model.Feature.run = run
+
+
 def patch_model_Table_raw():
     # Add attribute Table.raw
     def raw(self):
@@ -37,6 +53,38 @@ def patch_model_Table_raw():
         for row in self.rows:
             yield list(row)
     model.Table.raw = property(raw)
+
+
+def patch_runner_Runner_feature_files():
+    # Fix features loading
+    def feature_files(self):
+        files = []
+        for path in self.config.paths:
+            if os.path.isdir(path):
+                new_files = []
+                for dirpath, dirnames, filenames in os.walk(path):
+                    for filename in filenames:
+                        if filename.endswith('.feature'):
+                            new_files.append(os.path.join(dirpath, filename))
+                new_files.sort()
+                files.extend(new_files)
+            elif path.startswith('@') and os.path.exists(path[1:]):
+                with open(path[1:]) as f:
+                    files.extend([filename.strip() for filename in f])
+            elif os.path.exists(path):
+                files.append(path)
+            else:
+                raise RuntimeError("Can't find path: %s" % path)
+        return files
+    runner.Runner.feature_files = feature_files
+
+
+# Flush the output after each scenario
+class PlainFormatter(formatter.plain.PlainFormatter):
+
+    def result(self, result):
+        super(PlainFormatter, self).result(result)
+        self.stream.flush()
 
 
 # Fixes:
@@ -120,11 +168,11 @@ class PrettyFormatter(formatter.pretty.PrettyFormatter):
     def print_tags(self, tags, indent):
         if not tags:
             return
-        formatted_tags = u' '.join(self.format('tag').text('@' + tag)
-                                   for tag in tags)
-        self.stream.write(indent + formatted_tags + '\n')
+        tags = u' '.join(u'@' + tag for tag in tags)
+        self.stream.write(indent + self.format('tag').text(tags) + '\n')
 
     def eof(self):
         self.replay()
+        # Skip empty line (key up)
         self.stream.write('\033[A')
         self.stream.flush()
