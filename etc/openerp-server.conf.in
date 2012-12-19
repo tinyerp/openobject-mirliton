@@ -1,3 +1,5 @@
+${conf:misc}
+
 [options]
 ; Server
 admin_passwd = ${conf:admin_passwd}
