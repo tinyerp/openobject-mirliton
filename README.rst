@@ -47,7 +47,7 @@ If PostgreSQL is already installed on a separate server, adapt this step.
  $ mkvirtualenv -p python2.6 --no-site-packages oe
  $ workon oe
  $ pip install -U pip distribute
- $ pip install Babel Cython
+ $ pip install Babel
  $ pip freeze
 
 
