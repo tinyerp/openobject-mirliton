@@ -106,7 +106,7 @@ def impl(ctx):
 
 @given('the module "{name}" is installed')
 def impl(ctx, name):
-    (mod,) = model('ir.module.module').browse([('name', '=', name)])
+    mod = model('ir.module.module').get([('name', '=', name)])
     assert_equal(mod.state, 'installed')
 
 
@@ -189,10 +189,10 @@ def impl(ctx):
 
 @when('I set the "{name}" decimal precision to {digits:d} digits')
 def impl(ctx, name, digits):
-    (prec,) = model('decimal.precision').browse([('name', '=', name)])
+    prec = model('decimal.precision').get([('name', '=', name)])
     assert_true(prec)
     prec.digits = digits
-    (prec,) = model('decimal.precision').browse([('name', '=', name)])
+    prec = model('decimal.precision').get([('name', '=', name)])
     assert_equal(prec.digits, digits)
     #set_trace()
 
@@ -209,10 +209,9 @@ def impl(ctx):
 @when('I generate account chart')
 def impl(ctx):
     for template, digits in ctx.table:
-        chart = model('account.chart.template').browse(
+        chart = model('account.chart.template').get(
             [('name', '=', template)])
         assert_true(chart, "Can't find chart named %s" % template)
-        (chart,) = chart
         existing = model('account.account').search(
             [('code', '=', chart.account_root_id.code)])
         if existing:
@@ -240,7 +239,7 @@ def impl(ctx):
 
 @step('I create fiscal years since "{start_year:d}"')
 def impl(ctx, start_year):
-    stop_year = date.today().year
+    stop_year = (date.today() + timedelta(days=90)).year
     assert_less_equal(start_year, stop_year)
     all_years = [str(yr) for yr in range(start_year, stop_year + 1)]
     ctx.data['fiscalyear'] = all_years
@@ -302,9 +301,8 @@ def impl(ctx, path):
 @step('the main company currency is "{code}" with a rate of "{rate:f}"')
 def impl(ctx, code, rate):
     company = ctx.data['record']
-    curr = model('res.currency').browse([('name', '=', code)])
+    curr = model('res.currency').get([('name', '=', code)])
     assert_true(curr)
-    (curr,) = curr
     assert_true(curr.rate)
     curr.rate = rate
     company.currency_id = curr.id
@@ -316,12 +314,10 @@ def impl(ctx, code, rate):
 def impl(ctx, src, name, lang, value):
     res = ctx.data['record']
     assert_true(res)
-    trans_line = model('ir.translation').browse([
+    trans_line = model('ir.translation').get([
         'src = %s' % src, 'name = %s' % name, 'type = model',
         'lang = %s' % lang, 'res_id = %s' % res.id])
-    if trans_line:
-        (trans_line,) = trans_line
-    else:
+    if not trans_line:
         trans_line = model('ir.translation').create({
             'src': src, 'name': name, 'type': 'model',
             'lang': lang, 'res_id': res.id})
@@ -332,19 +328,16 @@ def impl(ctx, src, name, lang, value):
 
 @step('there is no user with login "{login}"')
 def impl(ctx, login):
-    users = model('res.users').browse(['login = %s' % login])
-    if users:
-        assert_equal(len(users), 1)
-        users.write({'active': False})
-        users.unlink()
+    user = model('res.users').get(['login = %s' % login])
+    if user:
+        user.write({'active': False})
+        user.unlink()
 
 
 @step('I duplicate the user "{username}"')
 def impl(ctx, username):
-    res = model('res.users').browse(['name = %s' % username, 'active = False'])
-    assert_equal(len(res), 1)
-    (tmpl_user,) = res
-    assert_false(tmpl_user.active)
+    tmpl_user = model('res.users').get(['name = %s' % username, 'active = False'])
+    assert_true(tmpl_user)
     assert_true(ctx.table)
     defaults = dict([(attr, value) for (attr, value) in ctx.table])
     defaults['active'] = True
@@ -358,6 +351,6 @@ def impl(ctx, username):
 def impl(ctx, name):
     head = ctx.data['record']
     assert_true(head)
-    report = model('ir.actions.report.xml').browse(['name = %s' % name])
+    report = model('ir.actions.report.xml').get(['name = %s' % name])
     assert_true(report)
     report.write({'webkit_header': head.id})

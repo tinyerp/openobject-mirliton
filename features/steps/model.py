@@ -29,10 +29,10 @@ def build_search_domain(ctx, obj, values):
     if xml_id:
         module, name = xml_id.split('.')
         search_domain = [('module', '=', module), ('name', '=', name)]
-        records = model('ir.model.data').browse(search_domain)
-        if not records:
+        record = model('ir.model.data').get(search_domain)
+        if not record:
             return None
-        res = records[0].read('model res_id')
+        res = record.read('model res_id')
         assert_equal(res['model'], obj)
         if res_id:
             assert_equal(res_id, res['res_id'])
@@ -89,11 +89,9 @@ def parse_table_values(ctx, obj, table):
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
-    found = search_domain and model(obj).browse(search_domain)
-    if found:
+    record = search_domain and model(obj).get(search_domain)
+    if record:
         # Record already exists
-        assert_equal(len(found), 1)
-        record = found[0]
         if ctx.table:
             values = parse_table_values(ctx, obj, ctx.table)
             record.write(values)
@@ -123,10 +121,8 @@ def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
     assert_is_not_none(search_domain)
-    found = model(obj).browse(search_domain)
-    assert_true(found)
-    assert_equal(len(found), 1)
-    record = found[0]
+    record = model(obj).get(search_domain)
+    assert_true(record)
     if ctx.table:
         values = parse_table_values(ctx, obj, ctx.table)
         record.write(values)
@@ -138,7 +134,7 @@ def impl(ctx, obj, domain):
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
-    found = search_domain and model(obj).browse(search_domain)
+    found = search_domain and model(obj).get(search_domain)
     assert_false(found)
     # Create the record
     xml_id = values.pop('xmlid', None)
@@ -164,8 +160,8 @@ def impl(ctx, obj, domain):
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
     search_domain = build_search_domain(ctx, obj, values)
-    records = search_domain and model(obj).browse(search_domain)
-    assert_false(records)
+    record = search_domain and model(obj).get(search_domain)
+    assert_false(record)
 
 
 @step(r'/^.*all (?:the )?"([\w._]+)" with (.+)$/')
@@ -191,7 +187,7 @@ def impl(ctx):
 @step("there is one record")
 def impl(ctx):
     assert_true(ctx.data['records'])
-    assert_equal(len(ctx.data['records']))
+    assert_equal(len(ctx.data['records']), 1)
     record = ctx.data['records'][0]
     assert_true(record)
     ctx.data['record'] = record

@@ -86,7 +86,7 @@ Tweak the configuration
 
 This is the content of the buildout:
 
-- (README, bootstrap.py)
+- (README.rst, bootstrap.py)
 - buildout.cfg                      (local conf)
 - etc/buildout-base.cfg             (base conf for OpenERP)
 - etc/buildout-pinned.cfg           (pin the required versions)
