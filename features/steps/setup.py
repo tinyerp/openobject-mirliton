@@ -295,11 +295,11 @@ def impl(ctx):
     journals.write({'update_posted': True})
 
 
-@step('all taxes are in TTC mode')
+@step('all prices are without taxes')
 def impl(ctx):
     taxes = model('account.tax').browse([])
     assert_true(taxes)
-    taxes.write({'price_include': True})
+    taxes.write({'price_include': False})
 
 
 # res.company
