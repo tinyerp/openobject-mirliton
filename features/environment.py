@@ -14,15 +14,14 @@ behave_better.patch_all()
 
 
 def before_all(ctx):
+    ctx._is_context = True
     server = erppeek.start_openerp_services(OPENERP_ARGS)
     admin_passwd = server.tools.config['admin_passwd']
-    database = server.tools.config['db_name']
-    ctx._is_context = True
     ctx.client = erppeek.Client(server, verbose=ctx.config.verbose)
     ctx.conf = {
         'server': server,
         'admin_passwd': admin_passwd,
-        'db_name': database,
+        'auth': {}
     }
 
 
