@@ -28,7 +28,7 @@ def patch_all():
 
 def patch_matchers_get_matcher():
     # Detect the regex expressions
-    # https://github.com/jeamland/behave/issues/73
+    # https://github.com/behave/behave/issues/73
     def get_matcher(func, string):
         if string[:1] == string[-1:] == '/':
             return matchers.RegexMatcher(func, string[1:-1])
@@ -38,7 +38,7 @@ def patch_matchers_get_matcher():
 
 def patch_model_Feature_run():
     # Fix exit status
-    # https://github.com/jeamland/behave/issues/52
+    # https://github.com/behave/behave/issues/52
     def run(self, runner):
         self._run_orig(runner)
         return runner.context.failed
@@ -57,6 +57,7 @@ def patch_model_Table_raw():
 
 def patch_runner_Runner_feature_files():
     # Fix features loading
+    # https://github.com/behave/behave/issues/103
     def feature_files(self):
         files = []
         for path in self.config.paths:
@@ -87,6 +88,9 @@ class PlainFormatter(formatter.plain.PlainFormatter):
         self.stream.flush()
 
 
+# https://github.com/behave/behave/pull/115
+# https://github.com/behave/behave/issues/118
+#
 # Fixes:
 # * colors for tags
 # * colors for tables
@@ -116,8 +120,14 @@ class PrettyFormatter(formatter.pretty.PrettyFormatter):
             self.stream.write('\n')
         self.stream.flush()
 
+        table_width = 7 + 3 * len(table.headings) + sum(max_lengths)
+        self.table_lines = len(all_rows) * (1 + table_width // self.display_width)
+
     def doc_string(self, doc_string, strformat=unicode):
         triplequotes = self.format('comments').text(u'"""')
+        self.text_lines = 2 + sum(
+            [(1 + (6 + len(line)) // self.display_width)
+             for line in doc_string.splitlines()])
         doc_string = strformat(self.escape_triple_quotes(doc_string))
         self.stream.write(self.indent(u'\n'.join([
             triplequotes, doc_string, triplequotes]), u'      ') + u'\n')
@@ -157,7 +167,7 @@ class PrettyFormatter(formatter.pretty.PrettyFormatter):
             line_length += len(location)
         self.stream.write("\n")
 
-        self.step_lines = int((line_length - 1) / self.display_width)
+        self.step_lines = int((line_length - 1) // self.display_width)
 
         if self.show_multiline:
             if step.text:
