@@ -1,0 +1,27 @@
+[DEFAULT]
+scheme = http
+host = localhost
+port = ${conf:xmlrpc_port}
+options = -c ${buildout:directory}/${server-conf:output} --without-demo all
+
+[behave]
+scheme = http
+database = behave
+username = admin
+password = admin
+
+[+behave]
+scheme = local
+database = behave
+username = admin
+password = admin
+
+[openerp]
+scheme = http
+database = ${conf:db_name}
+username = admin
+
+[+openerp]
+scheme = local
+database = ${conf:db_name}
+username = admin
