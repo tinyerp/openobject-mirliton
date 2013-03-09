@@ -90,6 +90,7 @@ This is the content of the buildout:
 - buildout.cfg                      (local conf)
 - etc/buildout-base.cfg             (base conf for OpenERP)
 - etc/buildout-pinned.cfg           (pin the required versions)
+- etc/erppeek.ini.in                (template for ERPpeek conf)
 - etc/openerp-server.conf.default   (default server conf, unused)
 - etc/openerp-server.conf.in        (template for server conf)
 
