@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 import erppeek
 
-from support import tools, behave_better
+from support import tools, behave_better, get_openerp_args
 
 __all__ = []
-OPENERP_ARGS = '-c etc/openerp-server.conf --without-demo all'
-OPENERP_ARGS += ' --logfile var/log/behave-stdout.log'
 
 # Print readable 'Fault' errors
 tools.patch_traceback()
@@ -15,7 +13,8 @@ behave_better.patch_all()
 
 def before_all(ctx):
     ctx._is_context = True
-    server = erppeek.start_openerp_services(OPENERP_ARGS)
+    openerp_args = get_openerp_args(erppeek.Client._config_file)
+    server = erppeek.start_openerp_services(openerp_args)
     admin_passwd = server.tools.config['admin_passwd']
     ctx.client = erppeek.Client(server, verbose=ctx.config.verbose)
     ctx.conf = {
