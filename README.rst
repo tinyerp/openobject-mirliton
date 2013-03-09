@@ -57,7 +57,7 @@ If PostgreSQL is already installed on a separate server, adapt this step.
 
  $ git clone git://github.com/florentx/openobject-mirliton.git demo
  $ cd demo
- $ python bootstrap.py -d
+ $ python bootstrap.py
 
  (verify and tweak the configuration, see instructions below)
 
