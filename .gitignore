@@ -13,6 +13,12 @@ sdist
 develop-eggs
 .installed.cfg
 
+# Mirliton
+erppeek.ini
+etc/openerp-server.conf
+etc/supervisord.conf
+src
+
 # Installer logs
 pip-log.txt
 
