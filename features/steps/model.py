@@ -1,85 +1,31 @@
 # -*- coding: utf-8 -*-
-from ast import literal_eval
-import time
-
 from support import *
+from support.openerp_helpers import (
+    parse_domain, parse_table_values, build_search_domain,
+    get_object, model_create, model_create_or_update)
 
 
-def parse_domain(domain):
-    rv = {}
-    if domain[-1:] == ':':
-        domain = domain[:-1]
-    for term in domain.split(' and '):
-        key, value = term.split(None, 1)
-        if key[-1:] == ':':
-            key = key[:-1]
-        try:
-            value = literal_eval(value)
-        except Exception:
-            # Interpret the value as a string
-            pass
-        rv[key.lstrip()] = value
-    return rv
+def get_company_property(ctx, pname, modelname, fieldname, company_oid=None):
+    company = None
+    if company_oid:
+        company = get_object(company_oid)
+        assert_equal(company._model_name, 'res.company')
+    field = model('ir.model.fields').get(
+        [('name', '=', fieldname), ('model', '=', modelname)])
+    assert_true(field, msg='no field %s in model %s' % (fieldname, modelname))
+
+    values = {
+        'name': pname,
+        'fields_id': field.id,
+        'res_id': False,
+        'type': 'many2one',
+    }
+    if company:
+        values['company_id'] = company.id
+    return model_create_or_update(ctx, 'ir.property', values)
 
 
-def build_search_domain(ctx, obj, values):
-    values = values.copy()
-    xml_id = values.pop('xmlid', None)
-    res_id = values.pop('id', None)
-    if xml_id:
-        module, name = xml_id.split('.')
-        search_domain = [('module', '=', module), ('name', '=', name)]
-        record = model('ir.model.data').get(search_domain)
-        if not record:
-            return None
-        res = record.read('model res_id')
-        assert_equal(res['model'], obj)
-        if res_id:
-            assert_equal(res_id, res['res_id'])
-        else:
-            res_id = res['res_id']
-    search_domain = [(key, '=', value) for (key, value) in values.items()]
-    if res_id:
-        search_domain = [('id', '=', res_id)] + search_domain
-    return search_domain
-
-
-def parse_table_values(ctx, obj, table):
-    fields = model(obj).fields()
-    assert_equal(len(table.headings), 2)
-    assert_true(fields)
-    res = {}
-    for (key, value) in table:
-        field_type = fields[key]['type']
-        if field_type in ('char', 'text'):
-            pass
-        elif value.lower() in ('false', '0', 'no', 'f', 'n', 'nil'):
-            value = False
-        elif field_type in ('many2one', 'one2many', 'many2many'):
-            relation = fields[key]['relation']
-            if value.startswith('by '):
-                values = parse_domain(value[3:])
-                search_domain = build_search_domain(ctx, relation, values)
-                if search_domain:
-                    value = model(relation).browse(search_domain).id
-                else:
-                    value = []
-            else:
-                method = getattr(model(relation), value)
-                value = method()
-            if value and field_type == 'many2one':
-                assert_equal(len(value), 1)
-                value = value[0]
-        elif field_type == 'integer':
-            value = int(value)
-        elif field_type == 'float':
-            value = float(value)
-        elif field_type == 'boolean':
-            value = True
-        elif field_type in ('date', 'datetime') and '%' in value:
-            value = time.strftime(value)
-        res[key] = value
-    return res
+# Feature steps
 
 
 @step(r'/^.*(?:need|there is|there\'s) (?:a|an|the) "([\w._]+)" with (.+)$/')
@@ -88,31 +34,8 @@ def parse_table_values(ctx, obj, table):
 # Then I need a "res.partner" with name Isaac Newton
 def impl(ctx, obj, domain):
     values = parse_domain(domain)
-    search_domain = build_search_domain(ctx, obj, values)
-    record = search_domain and model(obj).get(search_domain)
-    if record:
-        # Record already exists
-        if ctx.table:
-            values = parse_table_values(ctx, obj, ctx.table)
-            record.write(values)
-    else:
-        # Create the record
-        xml_id = values.pop('xmlid', None)
-        if ctx.table:
-            values.update(parse_table_values(ctx, obj, ctx.table))
-        assert_not_in('id', values)
-        record = model(obj).create(values)
-        assert_greater(record.id, 0)
-        if xml_id:
-            module, name = xml_id.split('.')
-            imd = model('ir.model.data').create({
-                'model': obj,
-                'module': module,
-                'name': name,
-                'res_id': record.id,
-            })
-            assert_greater(imd.id, 0)
-    ctx.data['record'] = record
+    new_values = ctx.table and parse_table_values(ctx, obj, ctx.table)
+    ctx.data['record'] = model_create_or_update(ctx, obj, values, new_values)
 
 
 @step(r'/^.*(?:an|the) existing "([\w._]+)" with (.+)$/')
@@ -123,6 +46,7 @@ def impl(ctx, obj, domain):
     assert_is_not_none(search_domain)
     record = model(obj).get(search_domain)
     assert_true(record)
+    # Update existing record
     if ctx.table:
         values = parse_table_values(ctx, obj, ctx.table)
         record.write(values)
@@ -137,22 +61,9 @@ def impl(ctx, obj, domain):
     found = search_domain and model(obj).get(search_domain)
     assert_false(found)
     # Create the record
-    xml_id = values.pop('xmlid', None)
     if ctx.table:
         values.update(parse_table_values(ctx, obj, ctx.table))
-    assert_not_in('id', values)
-    record = model(obj).create(values)
-    assert_greater(record.id, 0)
-    if xml_id:
-        module, name = xml_id.split('.')
-        imd = model('ir.model.data').create({
-            'model': obj,
-            'module': module,
-            'name': name,
-            'res_id': record.id,
-        })
-        assert_greater(imd.id, 0)
-    ctx.data['record'] = record
+    ctx.data['record'] = model_create(ctx, obj, values)
 
 
 @step(r'/^.*no "([\w._]+)" with (.+)$/')
@@ -201,3 +112,30 @@ def impl(ctx, attr, path):
         value = f.read()
     assert_true(value)
     record.write({attr: value})
+
+
+@given('I set global property named "{pname}" for model "{modelname}" and '
+       'field "{fieldname}" for company with ref "{company_oid}"')
+def impl(ctx, pname, modelname, fieldname, company_oid):
+    ctx.data['record'] = get_company_property(ctx, pname, modelname, fieldname, company_oid=company_oid)
+
+
+@given('I set global property named "{pname}" for model "{modelname}" and field "{fieldname}"')
+def impl(ctx, pname, modelname, fieldname):
+    ctx.data['record'] = get_company_property(ctx, pname, modelname, fieldname)
+
+
+@step('the property is related to model "{modelname}" using column "{column}" and value "{value}"')
+def impl(ctx, modelname, column, value):
+    ir_property = ctx.data.get('record')
+    assert_equal(ir_property._model_name, 'ir.property')
+    res = model(modelname).get([(column, '=', value), ('company_id', '=', ir_property.company_id.id)])
+    assert_true(res, msg="no record for %s = %r" % (column, value))
+    ir_property.write({'value_reference': '%s,%s' % (modelname, res.id)})
+
+
+@given('I am configuring the company with ref "{company_oid}"')
+def impl(ctx, company_oid):
+    c_domain = build_search_domain(ctx, 'res.company', {'xmlid': company_oid})
+    company = model('res.company').get(c_domain)
+    ctx.data['company_id'] = company.id

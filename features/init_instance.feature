@@ -8,7 +8,7 @@ Feature: Initialize a new database
 
   @newdb
   Scenario: Create a new database
-    Given the server is on
+    Given the server is up and running OpenERP 6.1
     And database "behave" does not exist
     When I create a new database "behave"
     Then the database "behave" exists
@@ -97,7 +97,7 @@ Feature: Initialize a new database
       | rml_header1            | Acme AG                       |
       | rml_footer1            | service.center@acme.invalid   |
       | rml_footer2            | 0                             |
-    And the main company currency is "CHF" with a rate of "1.00"
+    And the company currency is "CHF" with a rate of "1.00"
     And there is an existing "res.partner" with xmlid "base.main_partner"
       | name                            | value            |
       | name                            | Acme             |

@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import erppeek
 
-from support import tools, behave_better, get_openerp_args
+from support import tools, behave_better
+from support.openerp_helpers import get_openerp_args
 
 __all__ = []
 
