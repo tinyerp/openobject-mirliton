@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
+import glob
+import os.path
 
 from support import *
 
@@ -35,10 +37,18 @@ def impl(ctx, path):
     })
 
 
-@step('the webkit path is set to "{webkit_path}"')
-def impl(ctx, webkit_path):
+@step('the webkit path is configured')
+def impl(ctx):
+    # The binary is installed with a buildout recipe
+    webkit_path = os.path.join('parts', 'wkhtmltopdf', 'wkhtmltopdf*')
+    paths = glob.glob(webkit_path)
     param = model('ir.config_parameter').get(["key = webkit_path"])
-    if key:
+    if not paths and param and param.value and os.path.exists(param.value):
+        # If the path is correctly configured, this step is optional
+        return
+    assert_equal(len(paths), 1)
+    webkit_path = paths[0]
+    if param:
         param.write({'value': webkit_path})
     else:
         vals = {'key': 'webkit_path', 'value': webkit_path}

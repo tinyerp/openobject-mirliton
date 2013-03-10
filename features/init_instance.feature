@@ -54,6 +54,7 @@ Feature: Initialize a new database
       | account_payment            |
       | knowledge                  |
       | document                   |
+      | report_webkit              |
     Then the modules are installed
 
   @setup
@@ -79,6 +80,10 @@ Feature: Initialize a new database
       | it_IT |
       | en_US |
     Then all languages should be set to swiss formatting
+
+  @setup
+  Scenario: Configure WebKit
+    When the webkit path is configured
 
   @setup
   Scenario: Set decimal precision
