@@ -116,22 +116,31 @@ def build_search_domain(ctx, obj, values):
     return search_domain
 
 
-def parse_table_values(ctx, obj, table):
+def parse_table_values(ctx, obj, table, defaults=None):
     """Parse a table of (key, value) pairs.
 
     The argument 'obj' is the name of the model.
     The argument 'table' is an iterable of (key, value) pairs.
+    The optional argument 'defaults' is a dict of default values.
 
     Each value is parsed according to the type of field.
     """
     fields = model(obj).fields()
+    assert_true(fields)
     if hasattr(table, 'headings'):
         # if we have a real table, ensure it has 2 columns
         # otherwise, we will just fail during iteration
         assert_equal(len(table.headings), 2)
-    assert_true(fields)
-    res = {}
+    if defaults:
+        values = defaults.copy()
+        values.update(table)
+        res = values.copy()
+        table = values.items()
+    else:
+        res = {}
     for (key, value) in table:
+        if not isinstance(value, basestring):
+            continue
         add_mode = False
         field_type = fields[key]['type']
         if field_type in ('char', 'text'):
