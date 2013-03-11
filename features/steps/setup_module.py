@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from support import *
+from support.openerp_helpers import model_create_or_update
 
 
 # ir.module.module
@@ -120,14 +121,9 @@ def impl(ctx):
 def impl(ctx, src, name, lang, value):
     res = ctx.data['record']
     assert_true(res)
-    trans_line = model('ir.translation').get([
-        'src = %s' % src, 'name = %s' % name, 'type = model',
-        'lang = %s' % lang, 'res_id = %s' % res.id])
-    if not trans_line:
-        trans_line = model('ir.translation').create({
-            'src': src, 'name': name, 'type': 'model',
-            'lang': lang, 'res_id': res.id})
-    trans_line.value = value
+    vals = {'src': src, 'name': name, 'type': 'model',
+            'lang': lang, 'res_id': res.id}
+    model_create_or_update(ctx, 'ir.translation', vals, {'value': value})
 
 
 # decimal.precision
