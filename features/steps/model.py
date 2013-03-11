@@ -5,9 +5,6 @@ from support.openerp_helpers import (
     model_create, model_create_or_update)
 
 
-# Feature steps
-
-
 @step(r'/^.*(?:need|there is|there\'s) (?:a|an|the) "([\w._]+)" with (.+)$/')
 @step(r'/^.*(?:a|the) new or existing "([\w._]+)" with (.+)$/')
 # Given a new or existing "res.partner" with name Isaac Newton
