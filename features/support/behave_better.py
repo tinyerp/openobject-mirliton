@@ -20,6 +20,7 @@ def patch_all():
         patch_matchers_get_matcher()
         patch_model_Feature_run()
         patch_model_Table_raw()
+        patch_runner_Runner_load_step_definitions()
         patch_runner_Runner_feature_files()
         formatter.formatters.register(PlainFormatter)
         formatter.formatters.register(PrettyFormatter)
@@ -53,6 +54,24 @@ def patch_model_Table_raw():
         for row in self.rows:
             yield list(row)
     model.Table.raw = property(raw)
+
+
+def patch_runner_Runner_load_step_definitions():
+    # Fix globals leaking between modules
+    # https://github.com/behave/behave/issues/135
+    def exec_file(filename, globals={}, locals=None):
+        g = globals.copy()
+        exec_file_orig(filename, g, locals)
+
+    def load_step_definitions(self, extra_step_paths=[]):
+        runner.exec_file = exec_file
+        try:
+            self._lsd_orig(extra_step_paths)
+        finally:
+            runner.exec_file = exec_file_orig
+    exec_file_orig = runner.exec_file
+    runner.Runner._lsd_orig = runner.Runner.load_step_definitions
+    runner.Runner.load_step_definitions = load_step_definitions
 
 
 def patch_runner_Runner_feature_files():
