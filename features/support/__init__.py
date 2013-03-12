@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import ConfigParser as configparser
-
 from support import tools, mocks, openerp_helpers
 from support.tools import *
 
