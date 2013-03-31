@@ -54,6 +54,7 @@ Feature: Initialize a new database
       | account_payment            |
       | knowledge                  |
       | document                   |
+      | sale                       |
       | report_webkit              |
     Then the modules are installed
 
