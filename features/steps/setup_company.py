@@ -48,7 +48,7 @@ def impl(ctx):
         # If the path is correctly configured, this step is optional
         return
     assert_equal(len(paths), 1)
-    webkit_path = paths[0]
+    webkit_path = os.path.realpath(paths[0])
     if param:
         param.write({'value': webkit_path})
     else:
