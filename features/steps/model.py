@@ -81,6 +81,18 @@ def impl(ctx):
     ctx.data['record'] = record
 
 
+@step(r'/^.*delete the record$/')
+def impl(ctx):
+    assert_true(ctx.data['record'])
+    ctx.data['record'].unlink()
+
+
+@step(r'/^.*delete (?:all|the) records$/')
+def impl(ctx):
+    if ctx.data['records']:
+        ctx.data['records'].unlink()
+
+
 @step('attribute "{attr}" is set from "{path}"')
 def impl(ctx, attr, path):
     record = ctx.data['record']

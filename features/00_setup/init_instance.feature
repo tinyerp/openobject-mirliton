@@ -52,6 +52,7 @@ Feature: Initialize a new database
       | process                    |
       | account_chart              |
       | account_payment            |
+      | l10n_ch                    |
       | knowledge                  |
       | document                   |
       | sale                       |
@@ -91,8 +92,17 @@ Feature: Initialize a new database
     When I set the "Account" decimal precision to 4 digits
 
   @setup
+  Scenario: Generate account chart
+    Given the module "account" is installed
+    And no account is set
+    When I generate account chart:
+      | template               | digits |
+      | Plan comptable STERCHI | 0      |
+    Then accounts should be available
+
+  @setup
   Scenario: Create fiscal years
-    When I create fiscal years since "2010"
+    When I create fiscal years since "2012"
     Then fiscal years are available
 
   @setup
@@ -125,10 +135,10 @@ Feature: Initialize a new database
 
   @setup
   Scenario: Configure journal
-    # Given an existing "account.journal" with name "Banque CHF" and type "bank"
-    #   | name                      | value             |
-    #   | default_debit_account_id  | by code: "190200" |
-    #   | default_credit_account_id | by code: "190200" |
+    Given an existing "account.journal" with name "Banque CHF" and type "bank"
+      | name                      | value             |
+      | default_debit_account_id  | by code: "190200" |
+      | default_credit_account_id | by code: "190200" |
     Given all journals allow entry cancellation
 
   @setup

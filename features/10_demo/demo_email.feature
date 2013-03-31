@@ -18,6 +18,7 @@ Feature: Demonstrate the e-mail feature
         'body_text': 'Body'
     }
     """
+
   Scenario: Send an e-mail
     When I execute the Python commands
     """
