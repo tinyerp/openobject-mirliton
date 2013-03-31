@@ -32,6 +32,9 @@ def before_feature(ctx, feature):
 
 
 def before_scenario(ctx, scenario):
+    # Work around https://github.com/behave/behave/issues/145
+    if not hasattr(ctx, 'data'):
+        ctx.data = {}
     ctx.mock_smtp = mock_smtp_start()
     ctx.mock_ftp = mock_ftp_start()
 
