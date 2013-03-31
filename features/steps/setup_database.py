@@ -101,3 +101,16 @@ def impl(ctx, user, password):
     else:
         assert_greater(uid, 1)
     ctx.conf['auth'][(user, db_name)] = password
+
+
+@step('the user "{user}" is connected')
+def impl(ctx, user):
+    client = ctx.client
+    db_name = get_db_name(ctx, TEST_DATABASE)
+    password = ctx.conf['auth'][(user, db_name)]
+    uid = client.login(user, password, database=db_name)
+    assert_equal(client.user, user)
+    if user == 'admin':
+        assert_equal(uid, 1)
+    else:
+        assert_greater(uid, 1)

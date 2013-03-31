@@ -33,7 +33,7 @@ def impl(ctx):
     # 10 extra: web*
 
 
-@given('the module "{name}" is installed')
+@step('the module "{name}" is installed')
 def impl(ctx, name):
     mod = model('ir.module.module').get([('name', '=', name)])
     assert_equal(mod.state, 'installed')
