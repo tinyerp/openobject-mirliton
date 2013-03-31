@@ -25,12 +25,12 @@ pg_path = None
 unaccent = False
 
 ; NET-RPC Protocol
-netrpc = True
+netrpc = ${conf:netrpc}
 netrpc_interface = ${conf:netrpc_interface}
 netrpc_port = ${conf:netrpc_port}
 
 ; XML-RPC Protocol
-xmlrpc = True
+xmlrpc = ${conf:netrpc}
 xmlrpc_interface = ${conf:xmlrpc_interface}
 xmlrpc_port = ${conf:xmlrpc_port}
 proxy_mode = False
