@@ -26,6 +26,7 @@ def impl(ctx):
     assert_true(ctx.text)
     env = globals().copy()
     env['client'] = ctx.client
+    env['ctx'] = ctx
     exec ctx.text in env
 
 
