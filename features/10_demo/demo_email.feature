@@ -65,7 +65,6 @@ Feature: Demonstrate the e-mail feature
     """
     values = ctx.data['values']
     m1 = model('mail.compose.message').create(values)
-    puts(ctx.data)
     m1.send_mail()
     ctx.data['message1'] = m1
     """
