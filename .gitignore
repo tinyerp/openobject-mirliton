@@ -15,7 +15,7 @@ develop-eggs
 
 # Mirliton
 erppeek.ini
-etc/openerp-server.conf
+etc/openerp.cfg
 etc/supervisord.conf
 src
 
