@@ -15,7 +15,7 @@ Feature: Demonstrate the e-mail feature
         'email_from': 'admin@is.invalid',
         'email_to': 'sav@oerp.invalid',
         'subject': 'Subject',
-        'body_text': 'Body'
+        'body': 'Body'
     }
     """
 
@@ -23,10 +23,7 @@ Feature: Demonstrate the e-mail feature
     When I execute the Python commands
     """
     values = ctx.data['values']
-    vals = (values['email_from'], [values['email_to']],
-            values['subject'], values['body_text'])
-    m1_id = model('mail.message').schedule_with_attach(*vals)
-    m1 = model('mail.message').get(m1_id)
+    m1 = model('mail.mail').create(values)
     ctx.data['message1'] = m1
     """
     Then no e-mail is sent
@@ -60,30 +57,6 @@ Feature: Demonstrate the e-mail feature
     """
     Then no e-mail is sent
 
-  Scenario: Compose and send an e-mail
-    When I execute the Python commands
-    """
-    values = ctx.data['values']
-    m1 = model('mail.compose.message').create(values)
-    m1.send_mail()
-    ctx.data['message1'] = m1
-    """
-    Then an e-mail is sent from "admin@is.invalid" to "sav@oerp.invalid"
-    When I execute the Python commands
-    """
-    m1 = ctx.data['message1']
-    m1.send_mail()
-    m1.send_mail()
-    m1.send_mail()
-    """
-    Then 3 e-mails are sent
-    When I execute the Python commands
-    """
-    m1 = ctx.data['message1']
-    m1.unlink()
-    """
-    Then no e-mail is sent
-
   Scenario: Low-level e-mail feature
     When I execute the Python commands
     """
@@ -97,7 +70,7 @@ Feature: Demonstrate the e-mail feature
     msg['Subject'] = values['subject']
     msg['From'] = values['email_from']
     msg['To'] = values['email_to']
-    body = MIMEText(values['body_text'], _subtype='plain', _charset='utf-8')
+    body = MIMEText(values['body'], _subtype='plain', _charset='utf-8')
     msg.attach(body)
     assert_true(msg)
 

@@ -33,18 +33,18 @@ Feature: Demonstrate some Gherkin sentences
     And I filter all "res.partner" with name Very Big Corp.
     Then there is no record
 
-  Scenario: Create, select and delete partner events
-    When I create a new "res.partner.event" with name Easter
-    And I create a new "res.partner.event" with name Whit Sunday
-    And I search all "res.partner.event" with partner_id False
+  Scenario: Create, select and delete requests
+    When I create a new "res.request" with name Easter and act_to 1
+    And I create a new "res.request" with name Whit Sunday and act_to 1
+    And I search all "res.request" with ref_partner_id False and act_to 1
     Then there are some records
-    And an existing "res.partner.event" with name Easter
+    And an existing "res.request" with name Easter
     When I delete the record
-    Then I find no "res.partner.event" with name Easter
-    When I search all "res.partner.event" with partner_id False
+    Then I find no "res.request" with name Easter
+    When I search all "res.request" with ref_partner_id False and act_to 1
     Then there are some records
     When I delete all records
-    And I filter all "res.partner.event" with partner_id False
+    And I filter all "res.request" with ref_partner_id False and act_to 1
     Then there is no record
 
   Scenario: Update an attribute with the content of a file

@@ -8,7 +8,7 @@ Feature: Initialize a new database
 
   @newdb
   Scenario: Create a new database
-    Given the server is up and running OpenERP 6.1
+    Given the server is up and running OpenERP 7.0
     And database "behave" does not exist
     When I create a new database "behave"
     Then the database "behave" exists
@@ -32,7 +32,6 @@ Feature: Initialize a new database
     When I install the required modules:
       | name                       |
       | base                       |
-      | base_tools                 |
       | base_setup                 |
       | analytic                   |
       | board                      |
@@ -109,20 +108,16 @@ Feature: Initialize a new database
   Scenario: Configure main partner and company
     Given an existing "res.company" with xmlid "base.main_company"
       | name                   | value                         |
-      | rml_header2            | 0                             |
       | rml_header1            | Acme AG                       |
-      | rml_footer1            | service.center@acme.invalid   |
-      | rml_footer2            | 0                             |
+      | rml_footer             | service.center@acme.invalid   |
     And the company currency is "CHF" with a rate of "1.00"
     And there is an existing "res.partner" with xmlid "base.main_partner"
-      | name                            | value            |
-      | name                            | Acme             |
-      | lang                            | fr_FR            |
-      | website                         | www.acme.invalid |
-      | customer                        | false            |
-      | supplier                        | true             |
-    And there is an existing "res.partner.address" with xmlid "base.main_address"
       | name       | value                       |
+      | name       | Acme                        |
+      | lang       | fr_FR                       |
+      | website    | www.acme.invalid            |
+      | customer   | false                       |
+      | supplier   | true                        |
       | zip        | 1700                        |
       | fax        | 41016191010                 |
       | phone      | 41016191010                 |
@@ -130,15 +125,14 @@ Feature: Initialize a new database
       | street     | Avenue de Beaulieu 10       |
       | street2    |                             |
       | city       | Fribourg                    |
-      | name       | Acme                        |
       | country_id | by code: CH                 |
 
   @setup
   Scenario: Configure journal
-    Given an existing "account.journal" with name "Banque CHF" and type "bank"
-      | name                      | value             |
-      | default_debit_account_id  | by code: "190200" |
-      | default_credit_account_id | by code: "190200" |
+    Given an existing "account.journal" with name "Bank" and type "bank"
+      | name                      | value           |
+      | default_debit_account_id  | by code: "1902" |
+      | default_credit_account_id | by code: "1902" |
     Given all journals allow entry cancellation
 
   @setup
