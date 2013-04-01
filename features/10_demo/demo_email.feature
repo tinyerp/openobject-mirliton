@@ -35,7 +35,6 @@ Feature: Demonstrate the e-mail feature
     m1 = ctx.data['message1']
     assert_equal(m1.state, 'outgoing')
     m1.send()
-    assert_equal(m1.state, 'outgoing')      # TODO: fix ERPpeek
     m1.refresh()
     assert_equal(m1.state, 'sent')
     """
