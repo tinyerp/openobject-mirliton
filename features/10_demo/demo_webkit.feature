@@ -16,6 +16,9 @@ Feature: Demonstrate the WebKit report
       | sale |
     Then the module "sale" is installed
     And the models are loaded
+      | name        |
+      | res.partner |
+      | sale.order  |
 
   Scenario: Generate a webkit report
     Given a new or existing "ir.actions.report.xml" with name Test WebKit
