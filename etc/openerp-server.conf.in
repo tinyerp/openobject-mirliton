@@ -30,7 +30,7 @@ netrpc_interface = ${conf:netrpc_interface}
 netrpc_port = ${conf:netrpc_port}
 
 ; XML-RPC Protocol
-xmlrpc = ${conf:netrpc}
+xmlrpc = ${conf:xmlrpc}
 xmlrpc_interface = ${conf:xmlrpc_interface}
 xmlrpc_port = ${conf:xmlrpc_port}
 proxy_mode = False
