@@ -24,17 +24,10 @@ def impl(ctx):
 @step('I execute the Python commands')
 def impl(ctx):
     assert_true(ctx.text)
-    assert_false(ctx.mock_smtp.sendmail.called)
     env = globals().copy()
     env['client'] = ctx.client
     env['ctx'] = ctx
     exec ctx.text in env
-    if ctx.mock_smtp.sendmail.called:
-        # This phrase is used for migration: we don't want to verify
-        # e-mail notifications
-        for (args, _) in ctx.mock_smtp.sendmail.call_args_list:
-            puts(u'Mail from "%s" to "%s"' % (args[0], u','.join(args[1])))
-        ctx.mock_smtp.reset_mock()
 
 
 @step('I execute the SQL commands')
