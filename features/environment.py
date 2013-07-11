@@ -15,6 +15,10 @@ behave_better.patch_all()
 
 
 def before_all(ctx):
+    def _output_write(text):
+        for stream in ctx.config.outputs:
+            stream.open().write(text)
+    ctx._output_write = _output_write
     ctx._is_context = True
     openerp_args = get_openerp_args(erppeek.Client._config_file)
     server = erppeek.start_openerp_services(openerp_args)
@@ -46,8 +50,8 @@ def after_scenario(ctx, scenario):
         # sentence, for example "Then 3 e-mails are sent"
         unexpected_call = True
         for (args, _) in ctx.mock_smtp.sendmail.call_args_list:
-            ctx.config.output.write(u'      Mail from "%s" to "%s"\n' %
-                                    (args[0], u','.join(args[1])))
+            ctx._output_write(u'      Mail from "%s" to "%s"\n' %
+                              (args[0], u','.join(args[1])))
     if unexpected_call and ctx.config.stop:
         tools.set_trace()
     mock.patch.stopall()
@@ -63,11 +67,11 @@ def before_step(ctx, step):
 def after_step(ctx, laststep):
     if ctx._messages:
         # Flush the messages collected with puts(...)
-        output = ctx.config.output
         for item in ctx._messages:
             for line in str(item).splitlines():
-                output.write(u'      %s\n' % (line,))
-        output.flush()
+                ctx._output_write(u'      %s\n' % (line,))
+        for stream in ctx.config.outputs:
+            stream.open().flush()
     if laststep.status == 'failed' and ctx.config.stop:
         # Enter the interactive debugger
         tools.set_trace()
